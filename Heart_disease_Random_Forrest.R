@@ -78,8 +78,7 @@ rf_model <- randomForest(hd ~ .,
                          ntree = 1000,
                          mtry = round(sqrt(ncol(train_data))),
                          importance = TRUE,
-                         proximity = TRUE
-)
+                         proximity = TRUE)
 
 
 ## Model Evaluation
@@ -91,10 +90,19 @@ conf_matrix <- confusionMatrix(predictions, test_data$hd)
 conf_matrix
 
 
+
+
+## Feature Importance (as data frame)
+importance_df <- as.data.frame(importance(rf_model, type = 2))
+importance_df$Variable <- rownames(importance_df)
+importance_df <- importance_df[order(-importance_df$MeanDecreaseGini), ]
+importance_df
+
 # Variable Importance Plot
 varImpPlot(rf_model, 
            main = "Variable Importance",
            type = 2)
+
 
 ##Using the OOB Error Plot for determine the best value for number of trees (ntree)
 oob_error_data <- data.frame(
@@ -103,8 +111,9 @@ oob_error_data <- data.frame(
             rf_model$err.rate[, "Healthy"],
             rf_model$err.rate[, "UnHealthy"]),
   Type = rep(c("OOB", "Healthy", "UnHealthy"), 
-  each = nrow(rf_model$err.rate)))
-  
+             each = nrow(rf_model$err.rate)))
+
+rf_model$err.rate
 
 ## OOB Error Rate Plot
 ggplot(oob_error_data, aes(x = Trees, y = Error)) +
@@ -116,13 +125,6 @@ ggplot(oob_error_data, aes(x = Trees, y = Error)) +
 ## NOTE: The plot shows us after 500 trees the err.rate stabilized
 ## So the best value for ntree = 500
 
-
-
-## Feature Importance (as data frame)
-importance_df <- as.data.frame(importance(rf_model, type = 2))
-importance_df$Variable <- rownames(importance_df)
-importance_df <- importance_df[order(-importance_df$MeanDecreaseGini), ]
-importance_df
 
 
 
@@ -143,11 +145,11 @@ which(oob_values == min(oob_values))
 
 ## create a model for proximities using the best value for mtry and ntree
 rf_model_optimized <- randomForest(hd ~ ., 
-                      data=data_imputed,
-                      ntree=500, 
-                      proximity=TRUE,
-                      importance = TRUE, 
-                      mtry=which(oob_values == min(oob_values)))
+                                   data=data_imputed,
+                                   ntree=500, 
+                                   proximity=TRUE,
+                                   importance = TRUE, 
+                                   mtry=which(oob_values == min(oob_values)))
 
 
 ## create an MDS-plot to show how the samples are related to each other.
@@ -174,7 +176,3 @@ ggplot(data=mds_data, aes(x=X, y=Y, label=Sample, shape)) +
   labs(title="MDS plot using (1 - Random Forest Proximities)",
        x=paste("MDS1 - ", mds_var_per[1], "%", sep=""),
        y=paste("MDS2 - ", mds_var_per[2], "%", sep=""))
-
-
-
-  
